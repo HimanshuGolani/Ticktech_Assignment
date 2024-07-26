@@ -35,32 +35,37 @@ const locationData = [
   { latitude: 17.388377, longitude: 78.490004 },
 ];
 
-let map;
-let marker;
-let path = [];
-let polyline;
-let index = 0;
-const delay = 1000; // Delay between movements (in milliseconds)
+let map; // Variable to hold the map instance
+let marker; // Variable to hold the moving marker instance
+let path = []; // Array to store the path of the marker
+let polyline; // Variable to hold the polyline instance
+let index = 0; // Index to keep track of the current position in locationData
+const delay = 1000; // Delay between movements in milliseconds
 
+/**
+ * Initializes the map and sets up the initial markers and polyline.
+ */
 function initMap() {
+  // Create and configure the map, setting the initial view to the first location
   map = L.map("map").setView(
     [locationData[0].latitude, locationData[0].longitude],
     15
   );
 
+  // Add tile layer to the map (OpenStreetMap tiles)
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
       'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
-  // Create and add markers for start and end points
+  // Create and add markers for the start and end points of the route
   L.marker([locationData[0].latitude, locationData[0].longitude]).addTo(map);
   L.marker([
     locationData[locationData.length - 1].latitude,
     locationData[locationData.length - 1].longitude,
   ]).addTo(map);
 
-  // Draw a line connecting the start and end points
+  // Draw a blue line connecting the start and end points
   L.polyline(
     [
       [locationData[0].latitude, locationData[0].longitude],
@@ -76,48 +81,63 @@ function initMap() {
     }
   ).addTo(map);
 
-  // Add the moving marker and path
+  // Add the moving marker to the map with a custom car icon
   marker = L.marker([locationData[0].latitude, locationData[0].longitude], {
     icon: L.icon({
-      iconUrl: "/image/car.png",
-      iconSize: [50, 50],
-      iconAnchor: [25, 50],
+      iconUrl: "/image/car.png", // Path to the car icon image
+      iconSize: [50, 50], // Size of the icon
+      iconAnchor: [25, 50], // Anchor point of the icon (bottom center)
     }),
   }).addTo(map);
 
+  // Initialize the path array with the starting location
   path.push([locationData[0].latitude, locationData[0].longitude]);
+  // Create and add the polyline that will show the path of the marker
   polyline = L.polyline(path, {
     color: "red",
     weight: 2,
   }).addTo(map);
 }
 
+/**
+ * Moves the marker along the path defined by locationData.
+ */
 function moveMarker() {
   if (index < locationData.length) {
+    // Get the current position from locationData
     const position = [
       locationData[index].latitude,
       locationData[index].longitude,
     ];
+    // Update marker position
     marker.setLatLng(position);
+    // Adjust map view to the new marker position
     map.setView(position);
 
+    // Add the current position to the path array and update the polyline
     path.push(position);
     polyline.setLatLngs(path);
 
+    // Move to the next position after the specified delay
     index++;
     setTimeout(moveMarker, delay);
   }
 }
 
+/**
+ * Starts the simulation of moving the marker along the path.
+ */
 function startSimulation() {
-  index = 0; // Reset index to start from the beginning
-  path = []; // Clear the path
-  polyline.setLatLngs(path); // Update polyline
-  moveMarker(); // Start the marker movement
+  index = 0; // Reset index to start from the beginning of the path
+  path = []; // Clear the path array
+  polyline.setLatLngs(path); // Update the polyline to reflect the cleared path
+  moveMarker(); // Start moving the marker
 }
 
+// Add an event listener to the "startButton" to start the simulation when clicked
 document
   .getElementById("startButton")
   .addEventListener("click", startSimulation);
 
+// Initialize the map when the window loads
 window.onload = initMap;
